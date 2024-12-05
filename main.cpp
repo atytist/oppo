@@ -64,34 +64,58 @@ vector<measure_press> SortVectorBy(vector<measure_press> data, int mode) {
 	return data;
 }
 void PrintData(vector<measure_press> data) {
+
 	cout << setw(Width) << "Дата" << setw(Width) << "Высота" << setw(Width) << "Значение" << endl;
 	for (const auto& measure : data) {
 		cout << setw(Width) << measure.date << setw(Width) << measure.height << setw(Width) << measure.value << endl;
 	}
+
 }
+
+vector<measure_press> vector_1date(vector<measure_press> data) {
+	for (const auto& measure : data) {
+		cout << measure.date << endl;
+	}
+	cout << "choose date: ";
+	string date;
+	cin >> date;
+	vector<measure_press> filtered_data;
+	for (const auto& measure : data) {
+		if (measure.date == date) {
+			filtered_data.push_back(measure);
+		}
+	}
+	return filtered_data;
+}
+
+
 int main() {
 	setlocale(LC_ALL, "Russian");
 	string path = "oppo_1_in.txt";
 	vector<measure_press> data;    // распарсированные данные 
 	vector<measure_press> Sorted_Data;
+	vector<measure_press> filtered_data;
+
 	int mode = 0;
 
 	data = ReadFIle(path, data);
 
+	cout << "choose mode: 1 - standart mode, 2 - choose date ";
+	int method;
+	cin >> method;
 
-
-
-	while (mode != 4) {
-		system("cls");
-		PrintData(data);
+	if (method == 2) {
+		filtered_data = vector_1date(data);
+		PrintData(filtered_data);
 		cout << "1(Sort By Date)  2(Sort By Height)  3(Sort By Value)  4(Exit)" << endl;
 		cin >> mode;
+
 
 		switch (mode) {
 		case 1:
 		case 2:
 		case 3:
-			Sorted_Data = SortVectorBy(data, mode);
+			Sorted_Data = SortVectorBy(filtered_data, mode);
 			PrintData(Sorted_Data);
 			break;
 		case 4:
@@ -100,7 +124,31 @@ int main() {
 			cout << "Wrong command " << endl;
 			system("pause");
 		}
-		
 	}
+
+	else if (method == 1) {
+		while (mode != 4) {
+			PrintData(data);
+			cout << "1(Sort By Date)  2(Sort By Height)  3(Sort By Value)  4(Exit)" << endl;
+			cin >> mode;
+
+
+			switch (mode) {
+			case 1:
+			case 2:
+			case 3:
+				Sorted_Data = SortVectorBy(data, mode);
+				PrintData(Sorted_Data);
+				break;
+			case 4:
+				break;
+			default:
+				cout << "Wrong command " << endl;
+				system("pause");
+			}
+
+		}
+	}
+
 	return 0;
 }
