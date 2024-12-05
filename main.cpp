@@ -18,6 +18,7 @@ enum ActionChoos {
 	Sort_Same         = 6,
 	Exit              = 7
 };
+
 enum flag_reg {
 	date        = 1,
 	height_pres = 2,
@@ -25,14 +26,17 @@ enum flag_reg {
 	value       = 4
 
 };
+
 struct measure_press {
 	string date;
 	float height;
 	int value;
 };
+
 regex regular_date("([\\d]+[\\.][\\d]+[\\.][\\d\\n]+[^\\s])"); //. - любое кол-во символов \d - цифровые \. - точка \s - пробел
 regex regular_height("([\\d]+[,][\\d]+)|(^[\\d]+[.][\\d]+$)");
 regex regular_value("(^[\\d][ ]+|[ ][\\d]+[ ]|[ ][\\d]+$)|(^[\\d]+$)");
+
 measure_press parsing(measure_press measure, string str) {
 	string buffer;
 	smatch buf;
@@ -41,6 +45,7 @@ measure_press parsing(measure_press measure, string str) {
 	if (regex_search(str, buf, regular_value)) measure.value = stoi(buf.str());
 	return measure;
 }
+
 vector<measure_press> ReadFIle(const string& path, vector<measure_press> data) {
 	ifstream ist(path);
 	string buffer;
@@ -53,9 +58,11 @@ vector<measure_press> ReadFIle(const string& path, vector<measure_press> data) {
 	ist.close();
 	return data;
 }
+
 bool CompByHeight(measure_press left, measure_press right) { return left.height < right.height; }
 bool CompByDate(measure_press left, measure_press right) { return left.date < right.date; }
 bool CompByValue(measure_press left, measure_press right) { return left.value < right.value; }
+
 vector<measure_press> SortVectorBy(vector<measure_press> data, int mode) {
 	switch (mode) {
 	case 1: sort(begin(data), end(data), CompByDate); break;
@@ -66,6 +73,7 @@ vector<measure_press> SortVectorBy(vector<measure_press> data, int mode) {
 	}
 	return data;
 }
+
 void PrintData(vector<measure_press> data) {
 	cout << setw(Width) << "Дата" << setw(Width) << "Высота" << setw(Width) << "Значение" << endl;
 	for (const auto& measure : data) {
@@ -112,6 +120,7 @@ vector <measure_press> FindSame(vector <measure_press> data, string object) {
 	}
 	return data;
 }
+
 int main() {
 	setlocale(LC_ALL, "Russian");
 	string path = "oppo_1_in.txt", object;
