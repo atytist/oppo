@@ -52,7 +52,7 @@ vector<measure_press> ReadFIle(const string& path, vector<measure_press> data) {
 	while (!ist.eof()) {
 		getline(ist, buffer);
 		measure_press measure;
-		measure = parsing(measure, buffer); // если сразу парсить то не надо будет создавать дополнительный вектор<стринг> а сразу работать со структурным
+		measure = parsing(measure, buffer);
 		data.push_back(measure);
 	}
 	ist.close();
