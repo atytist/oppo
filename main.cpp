@@ -162,16 +162,18 @@ int main() {
 			break;
 		}
 		case Sort_Same: {
-			cout << "sort by: Date(1) Height(2) Value(3)" << endl;
-			cin >> mode_same;
 			if (Same_Obj.empty() == 1) {
 				cout << "Print Data or height or value: " << endl;
 				cin >> object;
 				Same_Obj = FindSame(data, object);
+				cout << "sort by: Date(1) Height(2) Value(3)" << endl;
+				cin >> mode_same;
 				Same_Obj = SortVectorBy(Same_Obj, mode_same);
 				PrintData(Same_Obj);
 			}
 			else {
+				cout << "sort by: Date(1) Height(2) Value(3)" << endl;
+				cin >> mode_same;
 				Same_Obj = SortVectorBy(Same_Obj, mode_same);
 				PrintData(Same_Obj);
 			}
