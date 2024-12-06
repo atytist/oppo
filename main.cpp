@@ -9,49 +9,60 @@
 #include <regex>
 #define Width 10
 using namespace std;
+enum ActionChoos {
+	Sort_by_date      = 1,
+	Sort_by_height    = 2,
+	sort_by_value     = 3,
+	Print_not_sorted  = 4,
+	Print_Same        = 5,
+	Sort_Same         = 6,
+	Exit              = 7
+};
+
+enum flag_reg {
+	date        = 1,
+	height_pres = 2,
+	height      = 3,
+	value       = 4
+
+};
+
 struct measure_press {
 	string date;
 	float height;
 	int value;
 };
+
+regex regular_date("([\\d]+[\\.][\\d]+[\\.][\\d\\n]+[^\\s])"); //. - любое кол-во символов \d - цифровые \. - точка \s - пробел
+regex regular_height("([\\d]+[,][\\d]+)|(^[\\d]+[.][\\d]+$)");
+regex regular_value("(^[\\d][ ]+|[ ][\\d]+[ ]|[ ][\\d]+$)|(^[\\d]+$)");
+
 measure_press parsing(measure_press measure, string str) {
-	regex regular_date("([\\d]+[\\.][\\d]+[\\.][\\d\\n]+[^\\s])");   //. - любое кол-во символов \d - цифровые \. - точка \s - пробел
-	regex regular_height("([\\d]+[,][\\d]+)");
-	regex regular_value("(^[\\d][ ]+|[ ][\\d]+[ ]|[ ][\\d]+$)");
 	string buffer;
 	smatch buf;
-	if (regex_search(str, buf, regular_date)) {
-		measure.date = buf.str();
-	}
-	if (regex_search(str, buf, regular_height)) {
-		measure.height = stof(buf.str());
-	}
-	if (regex_search(str, buf, regular_value)) {
-		measure.value = stoi(buf.str());
-	}
+	if (regex_search(str, buf, regular_date)) measure.date = buf.str();
+	if (regex_search(str, buf, regular_height)) measure.height = stof(buf.str());
+	if (regex_search(str, buf, regular_value)) measure.value = stoi(buf.str());
 	return measure;
 }
+
 vector<measure_press> ReadFIle(const string& path, vector<measure_press> data) {
 	ifstream ist(path);
 	string buffer;
 	while (!ist.eof()) {
 		getline(ist, buffer);
 		measure_press measure;
-		measure = parsing(measure, buffer); // если сразу парсить то не надо будет создавать дополнительный вектор<стринг> а сразу работать со структурным
+		measure = parsing(measure, buffer);
 		data.push_back(measure);
 	}
 	ist.close();
 	return data;
 }
-bool CompByHeight(measure_press left, measure_press right) {
-	return left.height < right.height;
-}
-bool CompByDate(measure_press left, measure_press right) {
-	return left.date < right.date;
-}
-bool CompByValue(measure_press left, measure_press right) {
-	return left.value < right.value;
-}
+
+bool CompByHeight(measure_press left, measure_press right) { return left.height < right.height; }
+bool CompByDate(measure_press left, measure_press right) { return left.date < right.date; }
+bool CompByValue(measure_press left, measure_press right) { return left.value < right.value; }
+
 vector<measure_press> SortVectorBy(vector<measure_press> data, int mode) {
 	switch (mode) {
 	case 1: sort(begin(data), end(data), CompByDate); break;
@@ -60,95 +71,124 @@ vector<measure_press> SortVectorBy(vector<measure_press> data, int mode) {
 	default:
 		return vector< measure_press>();
 	}
-
 	return data;
 }
+
 void PrintData(vector<measure_press> data) {
 
 	cout << setw(Width) << "Дата" << setw(Width) << "Высота" << setw(Width) << "Значение" << endl;
 	for (const auto& measure : data) {
 		cout << setw(Width) << measure.date << setw(Width) << measure.height << setw(Width) << measure.value << endl;
 	}
-
 }
 
-vector<measure_press> vector_1date(vector<measure_press> data) {
-	for (const auto& measure : data) {
-		cout << measure.date << endl;
-	}
-	cout << "choose date: ";
-	string date;
-	cin >> date;
-	vector<measure_press> filtered_data;
-	for (const auto& measure : data) {
-		if (measure.date == date) {
-			filtered_data.push_back(measure);
+bool range_in(string object, float delta, measure_press height) {
+	float object_f = stof(object);
+	if (height.height - delta <= object_f and object_f <= height.height + delta) return 0;
+	else return 1;
+}
+
+vector <measure_press> FindSame(vector <measure_press> data, string object) {
+	int flag = 0, i = 0;
+	float delta;
+	bool buf;
+
+	if (regex_search(object, regular_date))             flag = 1;
+	else if (regex_search(object, regular_height))      flag = 2;
+	else if (regex_search(object, regular_value))       flag = 4;
+
+	while (i != data.size()) {
+		switch (flag) {
+		case date: {
+			if (data[i].date != object) { data.erase(data.begin() + i); i -= 1; }
+			break;
 		}
+		case height_pres: {
+			cout << "Print precision: (±...)\n";
+			cin >> delta;
+			flag = 3;
+		}
+		case height: {
+			if (range_in(object, delta, data[i])) { data.erase(data.begin() + i); i -= 1; }
+			break;
+		}
+		case value: {
+			if (data[i].value != stoi(object)) { data.erase(data.begin() + i); i -= 1; }
+			break;
+		}
+		}
+		i += 1;
 	}
-	return filtered_data;
+	return data;
 }
-
 
 int main() {
 	setlocale(LC_ALL, "Russian");
-	string path = "oppo_1_in.txt";
-	vector<measure_press> data;    // распарсированные данные 
-	vector<measure_press> Sorted_Data;
-	vector<measure_press> filtered_data;
-
-	int mode = 0;
+	string path = "oppo_1_in.txt", object;
+	vector<measure_press> data, Sorted_Data, Same_Obj;
+	int mode = 0, mode_same = 0;
 
 	data = ReadFIle(path, data);
 
-	cout << "choose mode: 1 - standart mode, 2 - choose date ";
-	int method;
-	cin >> method;
-
-	if (method == 2) {
-		filtered_data = vector_1date(data);
-		PrintData(filtered_data);
-		cout << "1(Sort By Date)  2(Sort By Height)  3(Sort By Value)  4(Exit)" << endl;
+	while (mode != Exit) {
+		cout << "1 (Sort By Date)\n"
+			<< "2 (Sort By Height)\n"
+			<< "3 (Sort By Value)\n"
+			<< "4 (print data not sorted)\n"
+			<< "5 (Print the same)\n"
+			<< "6 (Sort the same)\n"
+			<< "7 (Exit)\n";
 		cin >> mode;
-
+		system("cls");
+		PrintData(data);
 
 		switch (mode) {
-		case 1:
-		case 2:
-		case 3:
-			Sorted_Data = SortVectorBy(filtered_data, mode);
+		case Sort_by_date:
+		case Sort_by_height:
+		case sort_by_value: {
+			Sorted_Data = SortVectorBy(data, mode);
 			PrintData(Sorted_Data);
 			break;
-		case 4:
+		}
+		case Print_not_sorted: {
+			PrintData(data);
 			break;
-		default:
-			cout << "Wrong command " << endl;
+		}
+		case Print_Same: {
+			cout << "Print Data or height or value: " << endl;
+			cin >> object;
+			Same_Obj.clear();
+			Same_Obj = FindSame(data, object);
+			PrintData(Same_Obj);
+			break;
+		}
+		case Sort_Same: {
+			if (Same_Obj.empty() == 1) {
+				cout << "Print Data or height or value: " << endl;
+				cin >> object;
+				Same_Obj = FindSame(data, object);
+				cout << "sort by: Date(1) Height(2) Value(3)" << endl;
+				cin >> mode_same;
+				Same_Obj = SortVectorBy(Same_Obj, mode_same);
+				PrintData(Same_Obj);
+			}
+			else {
+				cout << "sort by: Date(1) Height(2) Value(3)" << endl;
+				cin >> mode_same;
+				Same_Obj = SortVectorBy(Same_Obj, mode_same);
+				PrintData(Same_Obj);
+			}
+			break;
+		}
+		case Exit:
+			break;
+
+		default: {
+			cout << "Wrong command " << endl; 
 			system("pause");
 		}
-	}
-
-	else if (method == 1) {
-		while (mode != 4) {
-			PrintData(data);
-			cout << "1(Sort By Date)  2(Sort By Height)  3(Sort By Value)  4(Exit)" << endl;
-			cin >> mode;
-
-
-			switch (mode) {
-			case 1:
-			case 2:
-			case 3:
-				Sorted_Data = SortVectorBy(data, mode);
-				PrintData(Sorted_Data);
-				break;
-			case 4:
-				break;
-			default:
-				cout << "Wrong command " << endl;
-				system("pause");
-			}
-
 		}
-	}
 
+	}
 	return 0;
 }
