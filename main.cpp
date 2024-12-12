@@ -75,6 +75,7 @@ vector<measure_press> SortVectorBy(vector<measure_press> data, int mode) {
 }
 
 void PrintData(vector<measure_press> data) {
+
 	cout << setw(Width) << "Дата" << setw(Width) << "Высота" << setw(Width) << "Значение" << endl;
 	for (const auto& measure : data) {
 		cout << setw(Width) << measure.date << setw(Width) << measure.height << setw(Width) << measure.value << endl;
